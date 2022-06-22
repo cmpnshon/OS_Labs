@@ -8,7 +8,7 @@ p3="Capitalize on low hanging fruit to identify a ballpark value added activity 
 p4="Podcasting operational change management inside of workflows to establish a framework. Taking seamless key performance indicators offline to maximise the long tail. Keeping your eye on the ball while performing a deep dive on the start-up mentality to derive convergence on cross-platform integration."
 
 # Create directory structure
-mkdir -p ~/lab05/directory1 ~/lab04/directory2
+mkdir -p ~/lab05/directory1 ~/lab05/directory2
 
 # Create files
 echo -e $p0 > ~/lab05/randomText
