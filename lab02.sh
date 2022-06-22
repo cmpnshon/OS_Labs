@@ -5,9 +5,7 @@
 cd
 
 # Create dirs
-mkdir -p lab02/demo_pictures
-mkdir lab02/demo_documents
-mkdir lab02/demo_music
+mkdir -p lab02/demo_pictures lab02/demo_documents lab02/demo_music
 
 # Create pics
 touch lab02/demo_pictures/{a..e}at.jpg
