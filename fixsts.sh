@@ -56,8 +56,8 @@ IPADDRESS=$(ifconfig | grep eth0 -A1 | grep "inet addr" | awk -F ':' '{print $2}
 echo "Detected IP Address: $IPADDRESS" | tee -a $LOGFILE
 DOMAINCN="dc=$(echo "$DOMAIN" | sed 's/\./,dc=/g')"
 echo "Domain CN: $DOMAINCN"
-ADMIN="cn=cmpnshon,cn=users,$DOMAINCN"
-USERNAME="cmpnshon@${DOMAIN^^}"
+ADMIN="cn=administrator,cn=users,$DOMAINCN"
+USERNAME="administrator@${DOMAIN^^}"
 ROOTCERTDATE=$(openssl x509  -in /var/lib/vmware/vmca/root.cer -text | grep "Not After" | awk -F ' ' '{print $7,$4,$5}')
 TODAYSDATE=$(date +"%Y %b %d")
 
@@ -129,7 +129,7 @@ done
 
 echo ""
 echo ""
-read -s -p "Enter password for cmpnshon@$DOMAIN: " DOMAINPASSWORD
+read -s -p "Enter password for administrator@$DOMAIN: " DOMAINPASSWORD
 echo ""
 
 # Find the highest tenant credentials index
@@ -141,7 +141,7 @@ do
     then
         MAXCREDINDEX=$INDEX
     fi
-done < <(/opt/likewise/bin/ldapsearch -h localhost -p 389 -b "cn=$DOMAIN,cn=Tenants,cn=IdentityManager,cn=Services,$DOMAINCN" -D "cn=cmpnshon,cn=users,$DOMAINCN" -w "$DOMAINPASSWORD" "(objectclass=vmwSTSTenantCredential)" cn | grep cn:)
+done < <(/opt/likewise/bin/ldapsearch -h localhost -p 389 -b "cn=$DOMAIN,cn=Tenants,cn=IdentityManager,cn=Services,$DOMAINCN" -D "cn=administrator,cn=users,$DOMAINCN" -w "$DOMAINPASSWORD" "(objectclass=vmwSTSTenantCredential)" cn | grep cn:)
 
 # Sequentially search for tenant credentials up to max index  and delete if found
 echo "Highest tenant credentials index : $MAXCREDINDEX" | tee -a $LOGFILE
@@ -152,11 +152,11 @@ then
     do
         echo "Exporting tenant $i to $SCRIPTPATH" | tee -a $LOGFILE
         echo ""
-        ldapsearch -h localhost -D "cn=cmpnshon,cn=users,$DOMAINCN" -w "$DOMAINPASSWORD" -b "cn=TenantCredential-$i,cn=$DOMAIN,cn=Tenants,cn=IdentityManager,cn=Services,$DOMAINCN" > $SCRIPTPATH/tenantcredential-$i.ldif
+        ldapsearch -h localhost -D "cn=administrator,cn=users,$DOMAINCN" -w "$DOMAINPASSWORD" -b "cn=TenantCredential-$i,cn=$DOMAIN,cn=Tenants,cn=IdentityManager,cn=Services,$DOMAINCN" > $SCRIPTPATH/tenantcredential-$i.ldif
                 if [ $? -eq 0 ]
                 then
                     echo "Deleting tenant $i" | tee -a $LOGFILE
-                        ldapdelete -h localhost -D "cn=cmpnshon,cn=users,$DOMAINCN" -w "$DOMAINPASSWORD" "cn=TenantCredential-$i,cn=$DOMAIN,cn=Tenants,cn=IdentityManager,cn=Services,$DOMAINCN" | tee -a $LOGFILE
+                        ldapdelete -h localhost -D "cn=administrator,cn=users,$DOMAINCN" -w "$DOMAINPASSWORD" "cn=TenantCredential-$i,cn=$DOMAIN,cn=Tenants,cn=IdentityManager,cn=Services,$DOMAINCN" | tee -a $LOGFILE
                 else
                     echo "Tenant $i not found" | tee -a $LOGFILE
                     echo ""
@@ -175,7 +175,7 @@ do
     then
         MAXCERTCHAINSINDEX=$INDEX
     fi
-done < <(/opt/likewise/bin/ldapsearch -h localhost -p 389 -b "cn=$DOMAIN,cn=Tenants,cn=IdentityManager,cn=Services,$DOMAINCN" -D "cn=cmpnshon,cn=users,$DOMAINCN" -w "$DOMAINPASSWORD" "(objectclass=vmwSTSTenantTrustedCertificateChain)" cn | grep cn:)
+done < <(/opt/likewise/bin/ldapsearch -h localhost -p 389 -b "cn=$DOMAIN,cn=Tenants,cn=IdentityManager,cn=Services,$DOMAINCN" -D "cn=administrator,cn=users,$DOMAINCN" -w "$DOMAINPASSWORD" "(objectclass=vmwSTSTenantTrustedCertificateChain)" cn | grep cn:)
 
 # Sequentially search for trusted cert chains up to max index  and delete if found
 echo "Highest trusted cert chains index: $MAXCERTCHAINSINDEX" | tee -a $LOGFILE
@@ -186,11 +186,11 @@ then
     do
             echo "Exporting trustedcertchain $i to $SCRIPTPATH" | tee -a $LOGFILE
             echo ""
-                ldapsearch -h localhost -D "cn=cmpnshon,cn=users,$DOMAINCN" -w "$DOMAINPASSWORD" -b "cn=TrustedCertChain-$i,cn=TrustedCertificateChains,cn=$DOMAIN,cn=Tenants,cn=IdentityManager,cn=Services,$DOMAINCN" > $SCRIPTPATH/trustedcertchain-$i.ldif
+                ldapsearch -h localhost -D "cn=administrator,cn=users,$DOMAINCN" -w "$DOMAINPASSWORD" -b "cn=TrustedCertChain-$i,cn=TrustedCertificateChains,cn=$DOMAIN,cn=Tenants,cn=IdentityManager,cn=Services,$DOMAINCN" > $SCRIPTPATH/trustedcertchain-$i.ldif
             if [ $? -eq 0 ]
             then
                 echo "Deleting trustedcertchain $i" | tee -a $LOGFILE
-                ldapdelete -h localhost -D "cn=cmpnshon,cn=users,$DOMAINCN" -w "$DOMAINPASSWORD" "cn=TrustedCertChain-$i,cn=TrustedCertificateChains,cn=$DOMAIN,cn=Tenants,cn=IdentityManager,cn=Services,$DOMAINCN" | tee -a $LOGFILE
+                ldapdelete -h localhost -D "cn=administrator,cn=users,$DOMAINCN" -w "$DOMAINPASSWORD" "cn=TrustedCertChain-$i,cn=TrustedCertificateChains,cn=$DOMAIN,cn=Tenants,cn=IdentityManager,cn=Services,$DOMAINCN" | tee -a $LOGFILE
             else
                 echo "Trusted cert chain $i not found" | tee -a $LOGFILE
             fi
@@ -229,7 +229,7 @@ done
 echo ""
 echo "Applying newly generated STS certificate to SSO domain" | tee -a $LOGFILE
 
-/opt/likewise/bin/ldapmodify -x -h localhost -p 389 -D "cn=cmpnshon,cn=users,$DOMAINCN" -w "$DOMAINPASSWORD" -f sso-sts.ldif | tee -a $LOGFILE
+/opt/likewise/bin/ldapmodify -x -h localhost -p 389 -D "cn=administrator,cn=users,$DOMAINCN" -w "$DOMAINPASSWORD" -f sso-sts.ldif | tee -a $LOGFILE
 echo ""
 echo "Replacement finished - Please restart services on all vCenters and PSCs in your SSO domain" | tee -a $LOGFILE
 echo "==================================" | tee -a $LOGFILE
